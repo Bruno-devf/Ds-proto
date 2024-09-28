@@ -1,0 +1,12 @@
+[
+    {
+        "id":21,
+        "modelo": "Corolla",
+        "fabricante": "Toyota"
+    },
+    {
+        "id":21,
+        "modelo": "Strada",
+        "fabricante": "Fiat"
+    }
+]

@@ -1,5 +1,6 @@
 const express = require("express")
 const server = express()
+const carros = require("./scr/teste.json")
 
 server.get("/teste", (req, res) =>{
     return res.json({mensagem: "hello worldaaaaa"})
