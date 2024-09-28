@@ -1,15 +1,13 @@
 const express = require("express")
 const server = express()
-const carros = require("./scr/teste.json")
+const usuario = require("./scr/teste.json")
+const eventos = require("./scr/teste1.json")
 
-server.get("/teste", (req, res) =>{
-    return res.json({mensagem: "hello worldaaaaa"})
+server.get("/usuario", (req, res) =>{
+    return res.json({usuario})
 })
-server.get("/teste1", (req, res) =>{
-    return res.json({mensagem: "Olá mundo"})
-})
-server.get("/teste2", (req, res) =>{
-    return res.json({mensagem: "Olá"})
+server.get("/evento", (req, res) =>{
+    return res.json({eventos}) 
 })
 
 
