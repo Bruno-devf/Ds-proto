@@ -11,6 +11,6 @@ server.get("/evento", (req, res) =>{
 })
 
 
-server.listen(3300, ()=>{
+server.listen(6969, ()=>{
     console.log("servidor on")
 })
