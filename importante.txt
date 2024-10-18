@@ -1,0 +1,29 @@
+testa conexão
+connect
+    .authenticate()
+    .then(function () {
+        console.log("Conexão Bem Sucedida!!!");
+    })
+    .catch(function (err) {
+        console.log("Erro ao conectar ao banco de dados: " + err);
+    });
+
+cria tabela pelo json
+const teste = connect.define("teste", {
+        nome: {
+            type:Sequelize.STRING,
+        },
+        sobrenome: {
+            type: Sequelize.TEXT,
+        },
+    });
+   
+    teste.sync({ force: true});
+
+
+insert no node,
+
+teste.create({
+	nome: "kauê",
+	sobrenome: "Mendes"
+});

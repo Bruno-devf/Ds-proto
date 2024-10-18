@@ -3,13 +3,17 @@ const connect = new Sequelize("events", "root", "", {
     host: "localhost",
     dialect: "mysql"
 });
+ 
+const teste = connect.define("teste", {
+    nome: {
+        type:Sequelize.STRING,
+    },
+    sobrenome: {
+        type: Sequelize.TEXT,
+    },
+});
 
-connect
-    .authenticate()
-    .then(function () {
-        console.log("Conexão Bem Sucedida!!!");
-    })
-    .catch(function (err) {
-        console.log("Erro ao conectar ao banco de dados: " + err);
-    });
-
+teste.create({
+    nome: "kauê",
+    sobrenome: "Mendes"
+});
