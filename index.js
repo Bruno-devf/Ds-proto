@@ -1,24 +1,36 @@
 const express = require("express");
 const server = express();
-const usuario = require("./scr/teste.json");
-const evento = require("./scr/teste1.json");
-const { dirname } = require("path");
+const { create } = require("express-handlebars");
+const Sequelize = require("sequelize");
 
-server.get("/usuario", (req, res) =>{
-    return res.json({usuario})
-});
-server.get("/eventos", (req, res) =>{
-    return res.json({evento}) 
-});
+// Uncomment and specify the dialect if you want to connect to a database
+// const conexaoComBanco = new Sequelize("teste", "root", "", {
+//   host: "localhost",
+//   dialect: "mysql", // Specify your dialect here
+// });
 
-server.get("/", function (req, res){
-    return res.send("cu") 
+server.get("/professor/:nome/:email/:senha", function (req, res) {
+    res.send(req.params);
 });
 
-server.get("/teste", function (req, res) {
-    res.sendFile(__dirname + "/html/Index.html");
+server.get("/relatorio/:data/:desc/:finalidade", function (req, res) {
+    res.send(req.params);
 });
 
-server.listen(6969, ()=>{
-    console.log("servidor on")
+server.get("/evento/:nome/:data/:desc/:horario", function (req, res) {
+    res.send(req.params);
+});
+
+//server.get("/cad", function (req, res) {
+    // Render the form template
+    //res.render("form");
+//});
+
+// Set up Handlebars
+//const abs = create({ defaultLayout: "main" });
+//server.engine("handlebars", abs.engine);  
+//server.set("view engine", "handlebars");
+
+server.listen(3300, () => {
+    console.log("Servidor online");
 });
