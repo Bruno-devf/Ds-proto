@@ -1,8 +1,10 @@
 const express = require("express");
+const cors = require("cors");
 const { Sequelize, DataTypes } = require("sequelize");
 
 //### Configuração do Express e do Banco de Dados ###
 const rotas = express();
+rotas.use(cors());
 const sequelize = new Sequelize("events", "root", "", {
   host: "localhost",
   dialect: "mysql",
