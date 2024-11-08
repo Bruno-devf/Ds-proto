@@ -4,6 +4,7 @@ const { Sequelize, DataTypes } = require("sequelize");
 
 //### Configuração do Express e do Banco de Dados ###
 const rotas = express();
+rotas.use(express.json());
 rotas.use(cors());
 const sequelize = new Sequelize("events", "root", "", {
   host: "localhost",
@@ -63,12 +64,13 @@ rotas.get("/", function (req, res) {
   res.send("Rota principal");
 });
 
-rotas.get("/professor/:nome/:email/:senha", async function (req, res) {
-  const { nome, email, senha } = req.params;
+// Rota para criar Professor (POST)
+rotas.post("/professor", async function (req, res) {
+  const { nome, email, senha } = req.body;  // Acessa o corpo da requisição (POST)
   try {
     const novoProf = await Professor.create({ nome, email, senha });
     res.json({
-      resposta: "Professor criado com sucesso",
+      mensagem: "Professor criado com sucesso",
       professor: novoProf,
     });
   } catch (error) {
@@ -76,16 +78,38 @@ rotas.get("/professor/:nome/:email/:senha", async function (req, res) {
   }
 });
 
-rotas.get("/relatorio/:data/:desc/:finalidade", async function (req, res) {
-  const { data, desc, finalidade } = req.params;
+// Rota para criar Evento (POST)
+rotas.post("/evento", async function (req, res) {
+  const { nome, data, descricao, local, horario } = req.body;  // Acessa o corpo da requisição (POST)
   try {
-    const novoRelatorio = await Relatorio.create({ 
-      descricao: desc, 
-      tipo: finalidade, 
-      data: new Date(data), // Converte a data para um objeto Date
+    const novoEvento = await Evento.create({ 
+      nome, 
+      data: new Date(data),  // Converte a data para um objeto Date
+      descricao, 
+      local,
+      horario 
     });
     res.json({
-      resposta: "Relatório criado com sucesso",
+      mensagem: "Evento criado com sucesso",
+      evento: novoEvento,
+    });
+  } catch (error) {
+    res.status(500).json({ erro: "Erro ao criar evento", detalhe: error.message });
+  }
+});
+
+// Rota para criar Relatório (POST)
+rotas.post("/relatorio", async function (req, res) {
+  const { descricao, tipo, eventoId, professorId } = req.body;  // Acessa o corpo da requisição (POST)
+  try {
+    const novoRelatorio = await Relatorio.create({ 
+      descricao, 
+      tipo, 
+      eventoId, 
+      professorId
+    });
+    res.json({
+      mensagem: "Relatório criado com sucesso",
       relatorio: novoRelatorio,
     });
   } catch (error) {
@@ -93,24 +117,6 @@ rotas.get("/relatorio/:data/:desc/:finalidade", async function (req, res) {
   }
 });
 
-rotas.get("/evento/:nome/:data/:desc/:local/:horario", async function (req, res) {
-  const { nome, data, desc, local, horario, } = req.params;
-  try {
-    const novoEvento = await Evento.create({ 
-      nome, 
-      data: new Date(data), // Converte a data para um objeto Date
-      descricao: desc, 
-      local,
-      horario 
-    });
-    res.json({
-      resposta: "Evento criado com sucesso",
-      evento: novoEvento,
-    });
-  } catch (error) {
-    res.status(500).json({ erro: "Erro ao criar evento", detalhe: error.message });
-  }
-});
 
 rotas.get("/mostrarEvent", async function (req, res) {
     const evento = await Evento.findAll(); // Busca todos os registros
