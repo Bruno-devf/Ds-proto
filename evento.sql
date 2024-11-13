@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 25/10/2024 às 02:45
--- Versão do servidor: 10.4.28-MariaDB
--- Versão do PHP: 8.2.4
+-- Tempo de geração: 13/11/2024 às 02:29
+-- Versão do servidor: 10.4.32-MariaDB
+-- Versão do PHP: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Banco de dados: `events`
+-- Banco de dados: `evento`
 --
 
 -- --------------------------------------------------------
@@ -44,16 +44,15 @@ CREATE TABLE `eventos` (
 --
 
 INSERT INTO `eventos` (`id`, `nome`, `data`, `descricao`, `local`, `responsavelId`, `horario`, `createdAt`, `updatedAt`) VALUES
-(1, 'Workshop de Programação', '2024-11-10 00:00:00', 'Um workshop sobre as melhores práticas em programação.', 'Auditório Principal', 1, '10:00:00', '2024-10-25 00:29:24', '2024-10-25 00:29:24'),
-(2, 'Seminário de Inteligência Artificial', '2024-12-15 00:00:00', 'Discussão sobre as últimas tendências em IA.', 'Sala 101', 2, '14:00:00', '2024-10-25 00:29:24', '2024-10-25 00:29:24');
+(1, 'lhdbvh', '2024-11-14 00:00:00', 'asdvadsfvDV', 'SDVSDVBD', NULL, '02:59:00', '2024-11-13 00:59:29', '2024-11-13 00:59:29');
 
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `professores`
+-- Estrutura para tabela `professors`
 --
 
-CREATE TABLE `professores` (
+CREATE TABLE `professors` (
   `id` int(11) NOT NULL,
   `nome` varchar(255) DEFAULT NULL,
   `email` varchar(255) DEFAULT NULL,
@@ -63,12 +62,11 @@ CREATE TABLE `professores` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Despejando dados para a tabela `professores`
+-- Despejando dados para a tabela `professors`
 --
 
-INSERT INTO `professores` (`id`, `nome`, `email`, `senha`, `createdAt`, `updatedAt`) VALUES
-(1, 'Carlos Silva', 'carlos.silva@example.com', 'senhaSegura123', '2024-10-25 00:29:24', '2024-10-25 00:29:24'),
-(2, 'Maria Oliveira', 'maria.oliveira@example.com', 'senhaSuperSegura456', '2024-10-25 00:29:24', '2024-10-25 00:29:24');
+INSERT INTO `professors` (`id`, `nome`, `email`, `senha`, `createdAt`, `updatedAt`) VALUES
+(1, 'oi', 'oi@gmail.com', '$2a$10$Z/Hr1IMbBcgbX2UYT31Ow.Q4eGKdBf7O/X93giWE8gnAa.gef6qq2', '2024-11-13 00:25:54', '2024-11-13 00:25:54');
 
 -- --------------------------------------------------------
 
@@ -87,14 +85,6 @@ CREATE TABLE `relatorios` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Despejando dados para a tabela `relatorios`
---
-
-INSERT INTO `relatorios` (`id`, `descricao`, `tipo`, `eventoId`, `professorId`, `createdAt`, `updatedAt`) VALUES
-(1, 'Relatório do Workshop de Programação.', 'Feedback', 1, 1, '2024-10-25 00:29:24', '2024-10-25 00:29:24'),
-(2, 'Relatório do Seminário de Inteligência Artificial.', 'Resumo', 2, 2, '2024-10-25 00:29:24', '2024-10-25 00:29:24');
-
---
 -- Índices para tabelas despejadas
 --
 
@@ -106,9 +96,9 @@ ALTER TABLE `eventos`
   ADD KEY `responsavelId` (`responsavelId`);
 
 --
--- Índices de tabela `professores`
+-- Índices de tabela `professors`
 --
-ALTER TABLE `professores`
+ALTER TABLE `professors`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `email` (`email`);
 
@@ -128,19 +118,19 @@ ALTER TABLE `relatorios`
 -- AUTO_INCREMENT de tabela `eventos`
 --
 ALTER TABLE `eventos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
--- AUTO_INCREMENT de tabela `professores`
+-- AUTO_INCREMENT de tabela `professors`
 --
-ALTER TABLE `professores`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+ALTER TABLE `professors`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de tabela `relatorios`
 --
 ALTER TABLE `relatorios`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Restrições para tabelas despejadas
@@ -150,14 +140,14 @@ ALTER TABLE `relatorios`
 -- Restrições para tabelas `eventos`
 --
 ALTER TABLE `eventos`
-  ADD CONSTRAINT `eventos_ibfk_1` FOREIGN KEY (`responsavelId`) REFERENCES `professores` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `eventos_ibfk_1` FOREIGN KEY (`responsavelId`) REFERENCES `professors` (`id`);
 
 --
 -- Restrições para tabelas `relatorios`
 --
 ALTER TABLE `relatorios`
-  ADD CONSTRAINT `relatorios_ibfk_1` FOREIGN KEY (`eventoId`) REFERENCES `eventos` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `relatorios_ibfk_2` FOREIGN KEY (`professorId`) REFERENCES `professores` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `relatorios_ibfk_1` FOREIGN KEY (`eventoId`) REFERENCES `eventos` (`id`),
+  ADD CONSTRAINT `relatorios_ibfk_2` FOREIGN KEY (`professorId`) REFERENCES `professors` (`id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

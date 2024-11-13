@@ -1,18 +1,20 @@
 const express = require("express");
 const cors = require("cors");
+const bcrypt = require("bcryptjs");  // Biblioteca para criptografar a senha
 const { Sequelize, DataTypes } = require("sequelize");
 
 //### Configuração do Express e do Banco de Dados ###
 const rotas = express();
 rotas.use(express.json());
 rotas.use(cors());
-const sequelize = new Sequelize("events", "root", "", {
+
+const sequelize = new Sequelize("evento", "root", "", {
   host: "localhost",
   dialect: "mysql",
 });
 
 //### Definição dos Modelos ###
-const Professor = sequelize.define("professore", {
+const Professor = sequelize.define("professor", {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   nome: { type: DataTypes.STRING },
   email: { type: DataTypes.STRING, unique: true },
@@ -27,7 +29,7 @@ const Evento = sequelize.define("evento", {
   local: { type: DataTypes.STRING },
   responsavelId: {
     type: DataTypes.INTEGER,
-    references: { model: Professor, key: 'id' },
+    references: { model: Professor, key: 'id' },  // Corrigido para `Professor`
   },
   horario: { type: DataTypes.TIME },
 });
@@ -50,25 +52,64 @@ const Relatorio = sequelize.define("relatorio", {
 const syncModels = async () => {
   try {
     await sequelize.authenticate();
-    await sequelize.sync({ alter: false }); // Use 'alter: false' para não fazer alterações nas tabelas existentes
+    await sequelize.sync({ alter: false }); // Não altere as tabelas existentes
     console.log("Banco de dados conectado e modelos sincronizados.");
   } catch (error) {
     console.error("Erro ao conectar ao banco de dados:", error);
   }
 };
 
+//### Rota de Login ###
+rotas.post("/login", async (req, res) => {
+  const { email, senha } = req.body;
 
+  try {
+    // Verifica se o professor existe com o email fornecido
+    const professor = await Professor.findOne({ where: { email } });
 
-//### Rotas ###
-rotas.get("/", function (req, res) {
-  res.send("Rota principal");
+    if (!professor) {
+      return res.status(400).json({ erro: "Email ou senha incorretos." });
+    }
+
+    // Verifica se a senha fornecida é correta (comparando a senha criptografada)
+    const senhaValida = await bcrypt.compare(senha, professor.senha);
+
+    if (!senhaValida) {
+      return res.status(400).json({ erro: "Email ou senha incorretos." });
+    }
+
+    // Se as credenciais forem válidas, retorna sucesso
+    res.json({
+      mensagem: "Login bem-sucedido",
+      professor: {
+        id: professor.id,
+        nome: professor.nome,
+        email: professor.email,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ erro: "Erro ao realizar login", detalhe: error.message });
+  }
 });
 
-// Rota para criar Professor (POST)
-rotas.post("/professor", async function (req, res) {
-  const { nome, email, senha } = req.body;  // Acessa o corpo da requisição (POST)
+//### Rota para Criar Professor (POST) ###
+rotas.post("/professor", async (req, res) => {
+  const { nome, email, senha } = req.body;
+
   try {
-    const novoProf = await Professor.create({ nome, email, senha });
+    // Verifica se o email já está cadastrado
+    const professorExistente = await Professor.findOne({ where: { email } });
+
+    if (professorExistente) {
+      return res.status(400).json({ mensagem: "Este email já está cadastrado." });
+    }
+
+    // Criptografa a senha antes de salvar
+    const senhaCriptografada = await bcrypt.hash(senha, 10);
+
+    // Cria o novo professor com a senha criptografada
+    const novoProf = await Professor.create({ nome, email, senha: senhaCriptografada });
+
     res.json({
       mensagem: "Professor criado com sucesso",
       professor: novoProf,
@@ -78,16 +119,17 @@ rotas.post("/professor", async function (req, res) {
   }
 });
 
-// Rota para criar Evento (POST)
+//### Rota para Criar Evento (POST) ###
 rotas.post("/evento", async function (req, res) {
-  const { nome, data, descricao, local, horario } = req.body;  // Acessa o corpo da requisição (POST)
+  const { nome, data, descricao, local, horario, responsavelId } = req.body;
   try {
-    const novoEvento = await Evento.create({ 
-      nome, 
+    const novoEvento = await Evento.create({
+      nome,
       data: new Date(data),  // Converte a data para um objeto Date
-      descricao, 
+      descricao,
       local,
-      horario 
+      horario,
+      responsavelId
     });
     res.json({
       mensagem: "Evento criado com sucesso",
@@ -98,14 +140,14 @@ rotas.post("/evento", async function (req, res) {
   }
 });
 
-// Rota para criar Relatório (POST)
+//### Rota para Criar Relatório (POST) ###
 rotas.post("/relatorio", async function (req, res) {
-  const { descricao, tipo, eventoId, professorId } = req.body;  // Acessa o corpo da requisição (POST)
+  const { descricao, tipo, eventoId, professorId } = req.body;
   try {
-    const novoRelatorio = await Relatorio.create({ 
-      descricao, 
-      tipo, 
-      eventoId, 
+    const novoRelatorio = await Relatorio.create({
+      descricao,
+      tipo,
+      eventoId,
       professorId
     });
     res.json({
@@ -117,116 +159,94 @@ rotas.post("/relatorio", async function (req, res) {
   }
 });
 
-
+//### Rota para Mostrar Eventos ###
 rotas.get("/mostrarEvent", async function (req, res) {
-    const evento = await Evento.findAll(); // Busca todos os registros
-    res.json(evento); // Retorna os registros em formato JSON
+  const evento = await Evento.findAll(); // Busca todos os registros
+  res.json(evento); // Retorna os registros em formato JSON
 });
 
+//### Rota para Mostrar Professores ###
 rotas.get("/mostrarProf", async function (req, res) {
-    const professor = await Professor.findAll(); // Busca todos os registros
-    res.json(professor); // Retorna os registros em formato JSON
+  const professor = await Professor.findAll(); // Busca todos os registros
+  res.json(professor); // Retorna os registros em formato JSON
 });
 
+//### Rota para Mostrar Relatórios ###
 rotas.get("/mostrarRela", async function (req, res) {
-    const relatorio = await Relatorio.findAll(); // Busca todos os registros
-    res.json(relatorio); // Retorna os registros em formato JSON
+  const relatorio = await Relatorio.findAll(); // Busca todos os registros
+  res.json(relatorio); // Retorna os registros em formato JSON
 });
 
+//### Rota para Deletar Evento ###
 rotas.get("/deletarEvent/:id", async function (req, res) {
-    const { id } = req.params;
-    const idNumber = parseInt(id, 10); // Converte o ID para número
-  
-    const deleted = await Evento.destroy({
-      where: { id: idNumber },
-    });
-  
-    if (deleted) {
-      res.json({ mensagem: "Evento deletado com sucesso" });
-    } else {
-      res.status(404).json({ mensagem: "Evento não encontrado" });
-    }
+  const { id } = req.params;
+  const idNumber = parseInt(id, 10);
+
+  const deleted = await Evento.destroy({
+    where: { id: idNumber },
   });
 
-  rotas.get("/deletarProf/:id", async function (req, res) {
-    const { id } = req.params;
-    const idNumber = parseInt(id, 10); // Converte o ID para número
-  
-    const deleted = await Professor.destroy({
-      where: { id: idNumber },
-    });
-  
-    if (deleted) {
-      res.json({ mensagem: "Professor deletado com sucesso" });
-    } else {
-      res.status(404).json({ mensagem: "Professor não encontrado" });
-    }
+  if (deleted) {
+    res.json({ mensagem: "Evento deletado com sucesso" });
+  } else {
+    res.status(404).json({ mensagem: "Evento não encontrado" });
+  }
+});
+
+//### Rota para Deletar Professor ###
+rotas.get("/deletarProf/:id", async function (req, res) {
+  const { id } = req.params;
+  const idNumber = parseInt(id, 10);
+
+  const deleted = await Professor.destroy({
+    where: { id: idNumber },
   });
 
-  rotas.get("/deletarRela/:id", async function (req, res) {
-    const { id } = req.params;
-    const idNumber = parseInt(id, 10); // Converte o ID para número
-  
-    const deleted = await Relatorio.destroy({
-      where: { id: idNumber },
-    });
-  
-    if (deleted) {
-      res.json({ mensagem: "Relatorio deletado com sucesso" });
-    } else {
-      res.status(404).json({ mensagem: "Relatorio não encontrado" });
-    }
+  if (deleted) {
+    res.json({ mensagem: "Professor deletado com sucesso" });
+  } else {
+    res.status(404).json({ mensagem: "Professor não encontrado" });
+  }
+});
+
+//### Rota para Deletar Relatório ###
+rotas.get("/deletarRela/:id", async function (req, res) {
+  const { id } = req.params;
+  const idNumber = parseInt(id, 10);
+
+  const deleted = await Relatorio.destroy({
+    where: { id: idNumber },
   });
 
-  rotas.get("/editarProf/:id/:nome/:email/:senha", async function (req, res) {
-    const { id, nome, email,senha } = req.params;
-    const idNumber = parseInt(id, 10); // Converte o ID para número
-  
-    const [updated] = await Professor.update(
-      { nome, email, senha },
-      {
-        where: { id: idNumber }, // Usa o ID numérico
-      }
-    );
-  
-    res.json({
-      mensagem: "Professor atualizado com sucesso",
-    });
-  });
+  if (deleted) {
+    res.json({ mensagem: "Relatório deletado com sucesso" });
+  } else {
+    res.status(404).json({ mensagem: "Relatório não encontrado" });
+  }
+});
 
-  rotas.get("/editarEvent/:id/:nome/:data/:desc/:local/:horario", async function (req, res) {
-    const { id, nome, data, desc, local, horario } = req.params;
-    const idNumber = parseInt(id, 10); // Converte o ID para número
-  
-    const [updated] = await Evento.update(
-      { nome, data, desc, local, horario },
-      {
-        where: { id: idNumber }, // Usa o ID numérico
-      }
-    );
-  
-    res.json({
-      mensagem: "Evento atualizado com sucesso",
-    });
-  });
+//### Rota para Editar Professor ###
+rotas.put("/editarProf/:id", async function (req, res) {
+  const { id } = req.params;
+  const { nome, email, senha } = req.body;
+  const idNumber = parseInt(id, 10);
 
-  rotas.get("/editarRela/:id/:data/:desc/:finalidade", async function (req, res) {
-    const { id, data, desc, finalidade } = req.params;
-    const idNumber = parseInt(id, 10); // Converte o ID para número
-  
-    const [updated] = await Relatorio.update(
-      { data, desc, finalidade },
-      {
-        where: { id: idNumber }, // Usa o ID numérico
-      }
-    );
-  
-    res.json({
-      mensagem: "Relatorio atualizado com sucesso",
-    });
-  });
+  const senhaCriptografada = senha ? await bcrypt.hash(senha, 10) : undefined;
 
-//### Servidor ###
-rotas.listen(3031, function () {
-  console.log("Server is running on port 3031");
+  const [updated] = await Professor.update(
+    { nome, email, senha: senhaCriptografada },
+    { where: { id: idNumber } }
+  );
+
+  if (updated) {
+    res.json({ mensagem: "Professor atualizado com sucesso" });
+  } else {
+    res.status(404).json({ mensagem: "Professor não encontrado" });
+  }
+});
+
+syncModels();
+
+rotas.listen(3031, () => {
+  console.log("API rodando na porta 3031...");
 });
