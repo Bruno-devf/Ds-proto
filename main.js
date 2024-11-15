@@ -159,6 +159,7 @@ rotas.post("/relatorio", async function (req, res) {
   }
 });
 
+
 //### Rota para Mostrar Eventos ###
 rotas.get("/mostrarEvent", async function (req, res) {
   const evento = await Evento.findAll(); // Busca todos os registros
@@ -172,76 +173,120 @@ rotas.get("/mostrarProf", async function (req, res) {
 });
 
 //### Rota para Mostrar Relatórios ###
-rotas.get("/mostrarRela", async function (req, res) {
-  const relatorio = await Relatorio.findAll(); // Busca todos os registros
-  res.json(relatorio); // Retorna os registros em formato JSON
+rotas.get("/mostrarRelatorio", async function (req, res) {
+  try {
+    const relatorio = await Relatorio.findAll(); // Busca todos os registros
+    res.json(relatorio); // Retorna os registros em formato JSON
+  } catch (error) {
+    res.status(500).json({ erro: "Erro ao carregar relatórios", detalhe: error.message });
+  }
 });
+
 
 //### Rota para Deletar Evento ###
 rotas.get("/deletarEvent/:id", async function (req, res) {
   const { id } = req.params;
   const idNumber = parseInt(id, 10);
 
-  const deleted = await Evento.destroy({
-    where: { id: idNumber },
-  });
+  try {
+    const deleted = await Evento.destroy({
+      where: { id: idNumber },
+    });
 
-  if (deleted) {
-    res.json({ mensagem: "Evento deletado com sucesso" });
-  } else {
-    res.status(404).json({ mensagem: "Evento não encontrado" });
+    if (deleted) {
+      res.json({ mensagem: "Evento deletado com sucesso" });
+    } else {
+      res.status(404).json({ mensagem: "Evento não encontrado" });
+    }
+  } catch (error) {
+    res.status(500).json({ mensagem: "Erro ao deletar evento", erro: error.message });
   }
 });
 
-//### Rota para Deletar Professor ###
-rotas.get("/deletarProf/:id", async function (req, res) {
-  const { id } = req.params;
-  const idNumber = parseInt(id, 10);
-
-  const deleted = await Professor.destroy({
-    where: { id: idNumber },
-  });
-
-  if (deleted) {
-    res.json({ mensagem: "Professor deletado com sucesso" });
-  } else {
-    res.status(404).json({ mensagem: "Professor não encontrado" });
-  }
-});
-
-//### Rota para Deletar Relatório ###
+// Rota para Deletar Relatório
 rotas.get("/deletarRela/:id", async function (req, res) {
   const { id } = req.params;
   const idNumber = parseInt(id, 10);
 
-  const deleted = await Relatorio.destroy({
-    where: { id: idNumber },
-  });
+  try {
+    const deleted = await Relatorio.destroy({
+      where: { id: idNumber },
+    });
 
-  if (deleted) {
-    res.json({ mensagem: "Relatório deletado com sucesso" });
-  } else {
-    res.status(404).json({ mensagem: "Relatório não encontrado" });
+    if (deleted) {
+      res.json({ mensagem: "Relatório deletado com sucesso" });
+    } else {
+      res.status(404).json({ mensagem: "Relatório não encontrado" });
+    }
+  } catch (error) {
+    res.status(500).json({ mensagem: "Erro ao deletar relatório", erro: error.message });
   }
 });
 
 //### Rota para Editar Professor ###
-rotas.put("/editarProf/:id", async function (req, res) {
+rotas.put("/editarEvent/:id", async (req, res) => {
+  const { id } = req.params;
+  const { nome, data, descricao, local, horario } = req.body;
+  const idNumber = parseInt(id, 10);
+
+  try {
+    const evento = await Evento.update(
+      { nome, data, descricao, local, horario },
+      { where: { id: idNumber } }
+    );
+
+    if (evento[0] === 0) {
+      return res.status(404).json({ mensagem: "Evento não encontrado" });
+    }
+
+    res.json({ mensagem: "Evento atualizado com sucesso" });
+  } catch (error) {
+    res.status(500).json({ erro: "Erro ao atualizar evento", detalhe: error.message });
+  }
+});
+
+// Rota de Atualização de Relatório
+rotas.put("/editarRela/:id", async (req, res) => {
+  const { id } = req.params;
+  const { descricao, tipo } = req.body;
+  const idNumber = parseInt(id, 10);
+
+  try {
+    const relatorio = await Relatorio.update(
+      { descricao, tipo },
+      { where: { id: idNumber } }
+    );
+
+    if (relatorio[0] === 0) {
+      return res.status(404).json({ mensagem: "Relatório não encontrado" });
+    }
+
+    res.json({ mensagem: "Relatório atualizado com sucesso" });
+  } catch (error) {
+    res.status(500).json({ erro: "Erro ao atualizar relatório", detalhe: error.message });
+  }
+});
+
+// Rota de Atualização de Professor
+rotas.put("/editarProf/:id", async (req, res) => {
   const { id } = req.params;
   const { nome, email, senha } = req.body;
   const idNumber = parseInt(id, 10);
 
-  const senhaCriptografada = senha ? await bcrypt.hash(senha, 10) : undefined;
+  try {
+    const senhaCriptografada = senha ? await bcrypt.hash(senha, 10) : undefined;
+    const professor = await Professor.update(
+      { nome, email, senha: senhaCriptografada },
+      { where: { id: idNumber } }
+    );
 
-  const [updated] = await Professor.update(
-    { nome, email, senha: senhaCriptografada },
-    { where: { id: idNumber } }
-  );
+    if (professor[0] === 0) {
+      return res.status(404).json({ mensagem: "Professor não encontrado" });
+    }
 
-  if (updated) {
     res.json({ mensagem: "Professor atualizado com sucesso" });
-  } else {
-    res.status(404).json({ mensagem: "Professor não encontrado" });
+  } catch (error) {
+    res.status(500).json({ erro: "Erro ao atualizar professor", detalhe: error.message });
   }
 });
 
