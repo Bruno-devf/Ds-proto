@@ -58,6 +58,27 @@ const syncModels = async () => {
     console.error("Erro ao conectar ao banco de dados:", error);
   }
 };
+rotas.put("/evento/:id", async (req, res) => {
+  const { id } = req.params;
+  const { nome, data, descricao, local, horario, responsavelId } = req.body;
+  const idNumber = parseInt(id, 10);
+
+  try {
+    // Atualiza os dados do evento
+    const evento = await Evento.update(
+      { nome, data, descricao, local, horario, responsavelId },
+      { where: { id: idNumber } }
+    );
+
+    if (evento[0] === 0) {
+      return res.status(404).json({ mensagem: "Evento não encontrado" });
+    }
+
+    res.json({ mensagem: "Evento atualizado com sucesso" });
+  } catch (error) {
+    res.status(500).json({ erro: "Erro ao atualizar evento", detalhe: error.message });
+  }
+});
 
 //### Rota de Login ###
 rotas.post("/login", async (req, res) => {
@@ -183,14 +204,15 @@ rotas.get("/mostrarRelatorio", async function (req, res) {
 });
 
 
-//### Rota para Deletar Evento ###
-rotas.get("/deletarEvent/:id", async function (req, res) {
+// Rota para Deletar Evento
+rotas.delete("/deletarEvent/:id", async function (req, res) {
   const { id } = req.params;
-  const idNumber = parseInt(id, 10);
+  const idNumber = parseInt(id, 10); // Garante que o ID seja um número inteiro
 
   try {
+    // Verifica se o evento existe e exclui
     const deleted = await Evento.destroy({
-      where: { id: idNumber },
+      where: { id: idNumber }
     });
 
     if (deleted) {
@@ -204,13 +226,14 @@ rotas.get("/deletarEvent/:id", async function (req, res) {
 });
 
 // Rota para Deletar Relatório
-rotas.get("/deletarRela/:id", async function (req, res) {
+rotas.delete("/deletarRela/:id", async function (req, res) {
   const { id } = req.params;
-  const idNumber = parseInt(id, 10);
+  const idNumber = parseInt(id, 10); // Garante que o ID seja um número inteiro
 
   try {
+    // Verifica se o relatório existe e exclui
     const deleted = await Relatorio.destroy({
-      where: { id: idNumber },
+      where: { id: idNumber }
     });
 
     if (deleted) {
@@ -223,15 +246,34 @@ rotas.get("/deletarRela/:id", async function (req, res) {
   }
 });
 
+rotas.get("/deletarRela/:id", async function (req, res) {
+  const { id } = req.params;
+  const idNumber = parseInt(id, 10);
+
+  try {
+      const deleted = await Relatorio.destroy({
+          where: { id: idNumber },
+      });
+
+      if (deleted) {
+          res.json({ mensagem: "Relatório deletado com sucesso" });
+      } else {
+          res.status(404).json({ mensagem: "Relatório não encontrado" });
+      }
+  } catch (error) {
+      res.status(500).json({ mensagem: "Erro ao deletar relatório", erro: error.message });
+  }
+});
+
 //### Rota para Editar Professor ###
 rotas.put("/editarEvent/:id", async (req, res) => {
   const { id } = req.params;
-  const { nome, data, descricao, local, horario } = req.body;
+  const { nome, data, descricao, local, horario, responsavelId } = req.body;
   const idNumber = parseInt(id, 10);
 
   try {
     const evento = await Evento.update(
-      { nome, data, descricao, local, horario },
+      { nome, data, descricao, local, horario, responsavelId },
       { where: { id: idNumber } }
     );
 
@@ -287,6 +329,58 @@ rotas.put("/editarProf/:id", async (req, res) => {
     res.json({ mensagem: "Professor atualizado com sucesso" });
   } catch (error) {
     res.status(500).json({ erro: "Erro ao atualizar professor", detalhe: error.message });
+  }
+});
+rotas.get("/evento/:id", async function (req, res) {
+  const { id } = req.params;
+  const idNumber = parseInt(id, 10); // Converte o ID para número
+
+  // Verifica se o ID é um número válido
+  if (isNaN(idNumber)) {
+    return res.status(400).json({ erro: "ID inválido fornecido" });
+  }
+
+  try {
+    // Busca o evento pelo ID
+    const evento = await Evento.findOne({
+      where: { id: idNumber },
+    });
+
+    if (!evento) {
+      return res.status(404).json({ mensagem: "Evento não encontrado" });
+    }
+
+    // Retorna os dados do evento
+    res.json(evento);
+  } catch (error) {
+    res.status(500).json({ erro: "Erro ao buscar evento", detalhe: error.message });
+  }
+});
+
+
+rotas.get("/relatorio/:id", async function (req, res) {
+  const { id } = req.params;
+  const idNumber = parseInt(id, 10); // Converte o ID para número
+
+  // Verifica se o ID é um número válido
+  if (isNaN(idNumber)) {
+    return res.status(400).json({ erro: "ID inválido fornecido" });
+  }
+
+  try {
+    // Busca o evento pelo ID
+    const evento = await Relatorio.findOne({
+      where: { id: idNumber },
+    });
+
+    if (!evento) {
+      return res.status(404).json({ mensagem: "Relatório não encontrado" });
+    }
+
+    // Retorna os dados do evento
+    res.json(evento);
+  } catch (error) {
+    res.status(500).json({ erro: "Erro ao buscar relatório", detalhe: error.message });
   }
 });
 
