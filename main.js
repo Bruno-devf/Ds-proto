@@ -29,7 +29,7 @@ const Evento = sequelize.define("evento", {
   local: { type: DataTypes.STRING },
   responsavelId: {
     type: DataTypes.INTEGER,
-    references: { model: Professor, key: 'id' },  // Corrigido para `Professor`
+    references: { model: Professor, key: 'id' },
   },
   horario: { type: DataTypes.TIME },
 });
@@ -161,25 +161,50 @@ rotas.post("/evento", async function (req, res) {
   }
 });
 
-//### Rota para Criar Relatório (POST) ###
+
+// Rota para Criar Relatório (POST)
 rotas.post("/relatorio", async function (req, res) {
   const { descricao, tipo, eventoId, professorId } = req.body;
+
+  // Verifica se os campos obrigatórios foram fornecidos
+  if (!descricao || !tipo) {
+    return res.status(400).json({ erro: "Descricao e Tipo são obrigatórios." });
+  }
+
   try {
+    // Verifica se os IDs do evento e professor são válidos, caso sejam fornecidos
+    if (eventoId) {
+      const evento = await Evento.findByPk(eventoId);
+      if (!evento) {
+        return res.status(400).json({ erro: "Evento não encontrado com o ID fornecido." });
+      }
+    }
+
+    if (professorId) {
+      const professor = await Professor.findByPk(professorId);
+      if (!professor) {
+        return res.status(400).json({ erro: "Professor não encontrado com o ID fornecido." });
+      }
+    }
+
+    // Cria o novo relatório com as informações fornecidas
     const novoRelatorio = await Relatorio.create({
       descricao,
       tipo,
-      eventoId,
-      professorId
+      eventoId,  // Pode ser null se não for fornecido
+      professorId,  // Pode ser null se não for fornecido
     });
-    res.json({
+
+    // Retorna o relatório criado com sucesso
+    res.status(201).json({
       mensagem: "Relatório criado com sucesso",
       relatorio: novoRelatorio,
     });
   } catch (error) {
+    // Caso ocorra algum erro, retorna uma mensagem de erro
     res.status(500).json({ erro: "Erro ao criar relatório", detalhe: error.message });
   }
 });
-
 
 //### Rota para Mostrar Eventos ###
 rotas.get("/mostrarEvent", async function (req, res) {
